@@ -1,0 +1,56 @@
+type: install
+name: Docusaurus
+id: Docusaurus
+categories: ["apps/dev-and-admin-tools"]
+logo: https://docusaurus.io/img/docusaurus.svg
+homepage: https://docusaurus.io/
+
+description: |
+  Docusaurus is a static-site generator. It builds a single-page application with a fast client-side navigation, leveraging the full power of React to make your site interactive. It provides out-of-the-box documentation features, but can be used to create any kind of site (personal website, product, blog, marketing landing pages, etc).
+  
+ssl: true
+
+nodes:
+  - nodeType: nginx
+    nodeGroup: bl
+    count: 1
+    fixedCloudlets: 1
+    cloudlets: 4
+    
+  - nodeType: apache2
+    nodeGroup: cp
+    count: 1
+    fixedCloudlets: 1
+    cloudlets: 8
+      
+onInstall:
+  - npm
+  - docusaurus
+  - apacheConf
+
+actions:
+  npm:
+    cmd[cp]: |-
+      curl -sL https://rpm.nodesource.com/setup_16.x | sudo bash -
+      yum install -y nodejs
+    user: root
+    
+  docusaurus:
+    cmd[cp]: |-
+      cd /var/www/webroot/
+      rm -rf ROOT/
+      npx create-docusaurus@latest ROOT classic
+      cd ROOT/
+      npm run build
+      
+  apacheConf:
+    cmd[cp]: |-
+      sed -i "s!/var/www/webroot/ROOT!/var/www/webroot/ROOT/build!g" /etc/httpd/conf/httpd.conf
+      sudo service httpd restart
+
+success: |
+  Your Docusaurus environment is ready to go!
+
+  Don't forget to rebuild if you add new pages on your documentation ! 
+  
+  `npm run build`
